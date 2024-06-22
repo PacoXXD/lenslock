@@ -5,7 +5,8 @@ import (
 	"net/http"
 	"path/filepath"
 
-	"github.com/Pacoxxd/lenslocked/views"
+	"github.com/PacoXXD/lenslock/controller"
+	"github.com/PacoXXD/lenslock/views"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
 )
@@ -28,30 +29,28 @@ func execTemplate(w http.ResponseWriter, filepath string) {
 	// w.Write(data)
 }
 
-func homeHandler(w http.ResponseWriter, r *http.Request) {
-	tmpPath := filepath.Join("templates", "home.gohtml") //lenslocked/templates/contact.gohtml
-	execTemplate(w, tmpPath)
-}
+// func homeHandler(w http.ResponseWriter, r *http.Request) {
+// 	tmpPath := filepath.Join("templates", "home.gohtml") //lenslocked/templates/contact.gohtml
+// 	execTemplate(w, tmpPath)
+// }
 
-func contactHandler(w http.ResponseWriter, r *http.Request) {
-	tmpPath := filepath.Join("templates", "contact.gohtml")
-	execTemplate(w, tmpPath)
-}
+// func contactHandler(w http.ResponseWriter, r *http.Request) {
+// 	tmpPath := filepath.Join("templates", "contact.gohtml")
+// 	execTemplate(w, tmpPath)
+// }
 
-func faqHandler(w http.ResponseWriter, r *http.Request) {
-	tmpPath := filepath.Join("templates", "support.gohtml")
-	execTemplate(w, tmpPath)
-	// http.ServeFile(w, r, "support.html")
+// func faqHandler(w http.ResponseWriter, r *http.Request) {
+// 	tmpPath := filepath.Join("templates", "support.gohtml")
+// 	execTemplate(w, tmpPath)
+// http.ServeFile(w, r, "support.html")
 
-	// w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	// data, err := os.ReadFile("support.html")
-	// if err != nil {
-	// 	fmt.Printf("Read html failed %s", err)
-	// 	return
-	// }
-	// w.Write(data)
-
-}
+// w.Header().Set("Content-Type", "text/html; charset=utf-8")
+// data, err := os.ReadFile("support.html")
+// if err != nil {
+// 	fmt.Printf("Read html failed %s", err)
+// 	return
+// }
+// w.Write(data)
 
 // func pathHandler(w http.ResponseWriter, r *http.Request) {
 // 	// w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -90,16 +89,27 @@ func main() {
 
 	// var router Router
 	r := chi.NewRouter()
-	r.Use(middleware.Logger)
-	r.Get("/", homeHandler)
-	r.Get("/contact", contactHandler)
-	r.Get("/faq", faqHandler)
-	// r.Handle("/", &router)
-
-	// err := http.ListenAndServe(":8080", mux)
-	fmt.Println("Server is listening on :8080")
-	err := http.ListenAndServe(":8080", r)
+	tpl, err := views.Parse(filepath.Join("templates", "home.gohtml"))
 	if err != nil {
 		panic(err)
 	}
+	r.Get("/", controller.StaticHandler(tpl))
+
+	tpl, err = views.Parse(filepath.Join("templates", "contact.gohtml"))
+	if err != nil {
+		panic(err)
+	}
+	r.Get("/contact", controller.StaticHandler(tpl))
+
+	tpl, err = views.Parse(filepath.Join("templates", "support.gohtml"))
+	if err != nil {
+		panic(err)
+	}
+	r.Get("/faq", controller.StaticHandler(tpl))
+
+	r.Use(middleware.Logger)
+
+	// err := http.ListenAndServe(":8080", mux)
+	fmt.Println("Server is listening on :8080")
+	http.ListenAndServe(":8080", r)
 }
