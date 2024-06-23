@@ -10,13 +10,13 @@ import (
 
 func Must(t Template, err error) Template {
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
 	}
 	return t
 }
 
-func ParseFS(fs fs.FS, pattern string) (Template, error) {
-	tpl, err := template.ParseFS(fs, pattern)
+func ParseFS(fs fs.FS, patterns ...string) (Template, error) {
+	tpl, err := template.ParseFS(fs, patterns...)
 	if err != nil {
 		return Template{}, fmt.Errorf("Parse FS failed %s", err)
 	}

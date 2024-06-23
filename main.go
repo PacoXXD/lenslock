@@ -91,9 +91,9 @@ func main() {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 
-	r.Get("/", controller.StaticHandler(views.Must(views.ParseFS(templates.FS, "home.gotmp"))))
-	r.Get("/contact", controller.StaticHandler(views.Must(views.ParseFS(templates.FS, "contact.gotmp"))))
-	r.Get("/faq", controller.StaticHandler(views.Must(views.ParseFS(templates.FS, "support.gotmp"))))
+	r.Get("/", controller.StaticHandler(views.Must(views.ParseFS(templates.FS, "home.gohtml"))))
+	r.Get("/contact", controller.StaticHandler(views.Must(views.ParseFS(templates.FS, "contact.gohtml"))))
+	r.Get("/faq", controller.StaticHandler(views.Must(views.ParseFS(templates.FS, "support.gohtml"))))
 
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Page not Found", http.StatusNotFound)
