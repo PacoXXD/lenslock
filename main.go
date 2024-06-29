@@ -91,9 +91,19 @@ func main() {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 
-	r.Get("/", controller.StaticHandler(views.Must(views.ParseFS(templates.FS, "home.gohtml"))))
-	r.Get("/contact", controller.StaticHandler(views.Must(views.ParseFS(templates.FS, "contact.gohtml"))))
-	r.Get("/faq", controller.StaticHandler(views.Must(views.ParseFS(templates.FS, "support.gohtml"))))
+	r.Get("/", controller.StaticHandler(views.Must(views.ParseFS(templates.FS, "home.gohtml", "taiwind.gohtml"))))
+	r.Get("/contact", controller.StaticHandler(views.Must(views.ParseFS(templates.FS, "contact.gohtml", "taiwind.gohtml"))))
+	r.Get("/faq", controller.StaticHandler(views.Must(views.ParseFS(templates.FS, "support.gohtml", "taiwind.gohtml"))))
+	// r.Get("/signup", controller.StaticHandler(views.Must(views.ParseFS(templates.FS, "signup.gohtml", "taiwind.gohtml"))))
+	r.Get("/signin", controller.StaticHandler(views.Must(views.ParseFS(templates.FS, "signin.gohtml", "taiwind.gohtml"))))
+
+	usersC := controller.Users{}
+	usersC.Template.New = views.Must(views.ParseFS(templates.FS, "signup.gohtml", "taiwind.gohtml"))
+	r.Get("/signup", usersC.New)
+	r.Post("/signup", usersC.Create)
+
+	// r.HandleFunc("/contact", contactHandler)
+	// r.HandleFunc("/faq", faqHandler)
 
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Page not Found", http.StatusNotFound)
