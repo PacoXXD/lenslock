@@ -1,46 +1,39 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"os"
 
-	"github.com/jackc/pgx/v5"
+	"github.com/PacoXXD/lenslock/models"
 )
 
-type PostgresConfig struct {
-	Host     string
-	Port     string
-	Username string
-	Password string
-	Database string
-	SSLMode  string
-}
+// type PostgresConfig struct {
+// 	Host     string
+// 	Port     string
+// 	Username string
+// 	Password string
+// 	Database string
+// 	SSLMode  string
+// }
 
-func (c PostgresConfig) DSN() string {
-	return fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s", c.Host, c.Port, c.Username, c.Password, c.Database, c.SSLMode)
-}
+// func (c PostgresConfig) DSN() string {
+// 	return fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s", c.Host, c.Port, c.Username, c.Password, c.Database, c.SSLMode)
+// }
 
 func main() {
-	cfg := PostgresConfig{
-		Host:     "localhost",
-		Port:     "5432",
-		Username: "baloo",
-		Password: "junglebook",
-		Database: "lenslocked",
-		SSLMode:  "disable",
-	}
-	conn, err := pgx.Connect(context.Background(), cfg.DSN())
+	cfg := models.DefaultPostgresConfig()
+	pool, err := models.NewPostgresStore(cfg)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
 		os.Exit(1)
 	}
-	defer conn.Close(context.Background())
+	defer pool.Close()
 
-	us := &UserService{
-		DB: conn,
+	us := &models.UserService{
+		DB: pool,
 	}
-	user, err := us.Create("john@example.com", "wan890")
+
+	user, err := us.Create("yyyy@example.com", "wan890")
 	if err != nil {
 		panic(err)
 	}
