@@ -16,6 +16,15 @@ func Must(t Template, err error) Template {
 }
 
 func ParseFS(fs fs.FS, patterns ...string) (Template, error) {
+	// tpl := template.New(patterns[0])
+	// tpl = tpl.Funcs(
+	// 	template.FuncMap{
+	// 		"csrFiled": func() template.HTML {
+	// 			return `<-- TODO:Implementthi -->`
+
+	// 		},
+	// 	},
+	// )
 	tpl, err := template.ParseFS(fs, patterns...)
 	if err != nil {
 		return Template{}, fmt.Errorf("Parse FS failed %s", err)
@@ -26,6 +35,7 @@ func ParseFS(fs fs.FS, patterns ...string) (Template, error) {
 }
 
 func Parse(filePath string) (Template, error) {
+
 	tpl, err := template.ParseFiles(filePath)
 	if err != nil {
 		return Template{}, fmt.Errorf("Parse html failed %s", err)

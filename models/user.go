@@ -40,3 +40,22 @@ func (us *UserService) Create(email, password string) (*User, error) {
 	return &user, nil
 
 }
+
+func (us *UserService) Authenticate(email, password string) (*User, error) {
+	email = strings.ToLower(email)
+	user := User{
+		Email: email,
+	}
+	rows := us.DB.QueryRow(context.Background(), "SELECT id, password_hash FROM users WHERE email = $1", email)
+	err := rows.Scan(&user.ID, &user.PasswordHash)
+	if err != nil {
+		return nil, fmt.Errorf("Authenticate failed")
+	}
+	// Check that an encrypted password match one that's stored in the database
+	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
+	// If the credentials are valid, return the user object
+	if err != nil {
+		return nil, fmt.Errorf("invalid email address or password")
+	}
+	return &user, nil
+}
