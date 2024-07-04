@@ -23,7 +23,7 @@ func (u *Users) New(w http.ResponseWriter, r *http.Request) {
 	}
 	data.Email = r.FormValue("email")
 	// data.CSRFFild = csrf.TemplateField(r)
-	u.Template.New.Execute(w, data)
+	u.Template.New.Execute(w, r, data)
 }
 
 func (u *Users) SignIn(w http.ResponseWriter, r *http.Request) {
@@ -31,7 +31,7 @@ func (u *Users) SignIn(w http.ResponseWriter, r *http.Request) {
 		Email string
 	}
 	data.Email = r.FormValue("email")
-	u.Template.SignIn.Execute(w, data)
+	u.Template.SignIn.Execute(w, r, data)
 }
 
 func (u Users) ProcessSignIn(w http.ResponseWriter, r *http.Request) {
@@ -100,7 +100,7 @@ func (u *Users) Create(w http.ResponseWriter, r *http.Request) {
 // }
 
 func (u Users) CurrentUser(w http.ResponseWriter, r *http.Request) {
-	tokenCookie, err := readCookie(r, "CookieSession")
+	tokenCookie, err := readCookie(r, CookieSession)
 	if err != nil {
 		fmt.Fprint(w, "No cookie")
 		http.Redirect(w, r, "/signin", http.StatusFound)
@@ -115,21 +115,22 @@ func (u Users) CurrentUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Fprintf(w, "Current user: %v\n", user)
-	fmt.Fprintf(w, "header: %v", r.Header)
+	// fmt.Fprintf(w, "header: %v", r.Header)
 }
 
-// func (u Users) CurrentUser(w http.ResponseWriter, r *http.Request) {
-// 	token, err := readCookie(r, CookieSession)
-// 	if err != nil {
-// 		fmt.Println(err)
-// 		http.Redirect(w, r, "/signin", http.StatusFound)
-// 		return
-// 	}
-// 	user, err := u.SessionService.User(token)
-// 	if err != nil {
-// 		fmt.Println(err)
-// 		http.Redirect(w, r, "/signin", http.StatusFound)
-// 		return
-// 	}
-// 	fmt.Fprintf(w, "Current user: %s\n", user.Email)
-// }
+func (u Users) ProcessSignOut(w http.ResponseWriter, r *http.Request) {
+	tokenCookie, err := readCookie(r, CookieSession)
+	if err != nil {
+		http.Redirect(w, r, "/signin", http.StatusFound)
+		return
+	}
+	err = u.SessionService.Delete(tokenCookie)
+	if err != nil {
+		fmt.Fprint(w, "Unable to delete session")
+		deleteCookie(w, CookieSession)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+	deleteCookie(w, CookieSession)
+	http.Redirect(w, r, "/signin", http.StatusFound)
+}

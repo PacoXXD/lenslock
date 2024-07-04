@@ -22,6 +22,13 @@
           FAQ
         </a>
       </div>
+      <div>
+          <form action="/signout" method="post" class="inline pr-4">
+           <div class="hidden">
+            {{csrfField}}
+        </div>
+        <button type="submit">Sign Out</button>
+      </form>
       <div class="space-x-4">
         <a href="/signin">Sign in</a>
         <a href="/signup" class="px-4 py-2 bg-blue-700 hover:bg-blue-600 rounded">

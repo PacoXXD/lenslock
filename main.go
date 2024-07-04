@@ -11,6 +11,7 @@ import (
 	"github.com/PacoXXD/lenslock/views"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
+	"github.com/gorilla/csrf"
 )
 
 func main() {
@@ -57,15 +58,18 @@ func main() {
 	r.Get("/signin", usersC.SignIn)
 	r.Post("/signin", usersC.ProcessSignIn)
 	r.Get("/user/me", usersC.CurrentUser)
+	r.Post("/signout", usersC.ProcessSignOut)
 
 	fmt.Println("User service set up. Configuring 404 handler...")
 
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Page not Found", http.StatusNotFound)
 	})
+	csrfKey := "gFvi45R4fy5xNBlnEeZtQbfAVCYEIAUX"
+	csrfMw := csrf.Protect([]byte(csrfKey), csrf.Secure(false))
 
 	fmt.Println("Starting the HTTP server on port 3000...")
-	err = http.ListenAndServe(":8080", r)
+	err = http.ListenAndServe(":3000", csrfMw(r))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error starting server: %v\n", err)
 		os.Exit(1)

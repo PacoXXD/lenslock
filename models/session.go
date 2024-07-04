@@ -94,9 +94,10 @@ func (ss *SessionService) Get(token string) (*Session, error) {
 func (ss *SessionService) User(token string) (*User, error) {
 	tokenHash := ss.hash(token)
 	var user User
-
-	rows := ss.DB.QueryRow(context.Background(), "SELECT user_id FROM session WHERE token_hash=$1", tokenHash)
+	fmt.Println(tokenHash)
+	rows := ss.DB.QueryRow(context.Background(), "SELECT user_id FROM session WHERE token_hash=$1", token)
 	err := rows.Scan(&user.ID)
+	fmt.Println(user.ID)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return nil, fmt.Errorf("no session found: %w", err)
@@ -117,25 +118,14 @@ func (ss *SessionService) User(token string) (*User, error) {
 	return &user, nil
 }
 
-// func (ss *SessionService) User(token string) (*User, error) {
-// 	var user User
-// 	tokenHash := ss.hash(token)
-// 	rows := ss.DB.QueryRow(context.Background(), "SELECT user_id FROM session WHERE token_hash=$1", tokenHash)
-// 	err := rows.Scan(&user.ID)
-// 	if err != nil {
-// 		return nil, fmt.Errorf("get user %w", err)
-// 	}
-// 	fmt.Println(user.ID)
-// 	// Get the user ID from the session
-// 	rows = ss.DB.QueryRow(context.Background(), "SELECT email,password_hash FROM users WHERE id=$1", user.ID)
-// 	err = rows.Scan(&user.Email, &user.PasswordHash)
-// 	if err != nil {
-// 		return nil, fmt.Errorf("user %w", err)
-// 	}
-// 	fmt.Println(user.Email, user.PasswordHash)
-// 	return &user, nil
+func (ss *SessionService) Delete(token string) error {
 
-// }
+	_, err := ss.DB.Exec(context.Background(), "DELETE FROM session WHERE token_hash=$1", ss.hash(token))
+	if err != nil {
+		return fmt.Errorf("delete session %w", err)
+	}
+	return nil
+}
 
 func (ss *SessionService) hash(token string) string {
 	tokenHash := sha256.Sum256([]byte(token))
