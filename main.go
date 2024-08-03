@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/PacoXXD/lenslock/controller"
+	"github.com/PacoXXD/lenslock/migrations"
 	"github.com/PacoXXD/lenslock/models"
 	"github.com/PacoXXD/lenslock/templates"
 	"github.com/PacoXXD/lenslock/views"
@@ -30,12 +31,23 @@ func main() {
 	fmt.Println("Routes set up. Connecting to the database...")
 
 	cfg := models.DefaultPostgresConfig()
+	fmt.Fprintf(os.Stderr, "%#v\n", cfg)
+
 	pool, err := models.NewPostgresStore(cfg)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
 		os.Exit(1)
 	}
 	defer pool.Close()
+
+	db, err := models.NewPostgresDB(cfg)
+	if err != nil {
+		panic(err)
+	}
+	err = models.MigrateFS(db, migrations.FS, "")
+	if err != nil {
+		panic(err)
+	}
 
 	fmt.Println("Database connected. Setting up user service...")
 
@@ -65,11 +77,15 @@ func main() {
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Page not Found", http.StatusNotFound)
 	})
+
+	umw := controller.UserMiddleware{
+		SessionService: &sessionService,
+	}
 	csrfKey := "gFvi45R4fy5xNBlnEeZtQbfAVCYEIAUX"
 	csrfMw := csrf.Protect([]byte(csrfKey), csrf.Secure(false))
 
 	fmt.Println("Starting the HTTP server on port 3000...")
-	err = http.ListenAndServe(":3000", csrfMw(r))
+	err = http.ListenAndServe(":3000", csrfMw(umw.SetUser(r)))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error starting server: %v\n", err)
 		os.Exit(1)

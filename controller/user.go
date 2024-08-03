@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/PacoXXD/lenslock/context"
 	"github.com/PacoXXD/lenslock/models"
 )
 
@@ -100,21 +101,28 @@ func (u *Users) Create(w http.ResponseWriter, r *http.Request) {
 // }
 
 func (u Users) CurrentUser(w http.ResponseWriter, r *http.Request) {
-	tokenCookie, err := readCookie(r, CookieSession)
-	if err != nil {
-		fmt.Fprint(w, "No cookie")
+	user := context.User(r.Context())
+	if user == nil {
 		http.Redirect(w, r, "/signin", http.StatusFound)
 		return
 	}
-	fmt.Println(tokenCookie)
-	user, err := u.SessionService.User(tokenCookie)
-	if err != nil {
-		fmt.Fprint(w, "Invalid token")
-		http.Redirect(w, r, "/signin", http.StatusFound)
-		return
-	}
-
 	fmt.Fprintf(w, "Current user: %v\n", user)
+
+	// tokenCookie, err := readCookie(r, CookieSession)
+	// if err != nil {
+	// 	fmt.Fprint(w, "No cookie")
+	// 	http.Redirect(w, r, "/signin", http.StatusFound)
+	// 	return
+	// }
+	// fmt.Println(tokenCookie)
+	// user, err := u.SessionService.User(tokenCookie)
+	// if err != nil {
+	// 	fmt.Fprint(w, "Invalid token")
+	// 	http.Redirect(w, r, "/signin", http.StatusFound)
+	// 	return
+	// }
+
+	// fmt.Fprintf(w, "Current user: %v\n", user)
 	// fmt.Fprintf(w, "header: %v", r.Header)
 }
 
@@ -133,4 +141,27 @@ func (u Users) ProcessSignOut(w http.ResponseWriter, r *http.Request) {
 	}
 	deleteCookie(w, CookieSession)
 	http.Redirect(w, r, "/signin", http.StatusFound)
+}
+
+type UserMiddleware struct {
+	SessionService *models.SessionService
+}
+
+func (umw UserMiddleware) SetUser(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		tokenCookie, err := readCookie(r, CookieSession)
+		if err != nil {
+			next.ServeHTTP(w, r)
+			return
+		}
+		user, err := umw.SessionService.User(tokenCookie)
+		if err != nil {
+			next.ServeHTTP(w, r)
+			return
+		}
+		ctx := r.Context()
+		ctx = context.WithUser(ctx, user)
+		r = r.WithContext(ctx)
+		next.ServeHTTP(w, r)
+	})
 }
